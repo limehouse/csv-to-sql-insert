@@ -1,2 +1,7 @@
-# csv-to-sql-insert
-Convert a CSV file into SQL insert statements
+# 🗃 CSV-to-SQL-insert
+
+Generate SQL insert statements from a CSV file, using JavaScript and HTML.
+
+# 👁 Preview
+
+![Image](demo.png)

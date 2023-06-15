@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSV to SQL Converter</title>
+</head>
+<body>
+  <label for="tableName">Table Name:</label>
+  <input type="text" id="tableName" placeholder="Enter table name">
+  <br>
+  <input type="file" id="csvFileInput" accept=".csv">
+  <br>
+  <button onclick="convertToSQL()">Convert to SQL</button>
+  <br>
+  <textarea id="sqlOutput" rows="10" cols="50" readonly></textarea>
+  <br>
+  <a id="downloadButton" href="#" style="display: none;">Download</a>
+
+  <script>
+    function convertToSQL() {
+      var fileInput = document.getElementById('csvFileInput');
+      var file = fileInput.files[0];
+      var reader = new FileReader();
+
+      reader.onload = function(event) {
+        var csvData = event.target.result;
+        var tableName = document.getElementById('tableName').value;
+        var sqlStatements = convertCSVToSQL(csvData, tableName);
+        var sqlOutput = document.getElementById('sqlOutput');
+        sqlOutput.value = sqlStatements;
+
+        var downloadButton = document.getElementById('downloadButton');
+        if (sqlStatements.trim().length > 0) {
+          downloadButton.style.display = 'inline';
+          downloadButton.href = "data:text/plain;charset=utf-8," + encodeURIComponent(sqlStatements);
+          var fileName = tableName + "_inserts_" + getRowCount(sqlStatements) + ".sql";
+          downloadButton.setAttribute("download", fileName);
+        } else {
+          downloadButton.style.display = 'none';
+        }
+      };
+
+      reader.readAsText(file);
+    }
+
+    function convertCSVToSQL(csvData, tableName) {
+      var lines = csvData.split('\n');
+      var columns = lines[0].split(',');
+
+      var sqlStatements = '';
+      for (var i = 1; i < lines.length; i++) {
+        var values = lines[i].split(',');
+        if (values.length !== columns.length) {
+          continue; // Skip lines with inconsistent column count
+        }
+
+        var sqlValues = values.map(function(value) {
+          if (value.trim().toLowerCase() === 'null') {
+            return 'null';
+          } else {
+            return "'" + value.trim().replace(/'/g, "''") + "'";
+          }
+        });
+
+        var insertStatement = "INSERT INTO " + tableName + " (" + columns.join(', ') +
+          ") VALUES (" + sqlValues.join(', ') + ");\n";
+
+        sqlStatements += insertStatement;
+      }
+
+      return sqlStatements;
+    }
+
+    function getRowCount(sqlStatements) {
+      // Count the number of occurrences of "INSERT INTO" in the SQL statements
+      var rowCount = sqlStatements.match(/INSERT INTO/g).length;
+      return rowCount;
+    }
+  </script>
+</body>
+</html>
